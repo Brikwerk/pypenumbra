@@ -1,7 +1,8 @@
+import math
+
 import cv2
 import numpy as np
-from skimage.draw import line
-import math
+from scipy.interpolate import interp2d
 
 def threshold(gray_image):
     """Uses a gaussian blur and Otsu method thresholding
@@ -64,14 +65,15 @@ def get_line(x1, y1, x2, y2, image, radius):
     n = int(round(math.sqrt(dx*dx + dy*dy)))
 
     data = []
-    xinc = float(dx/n)
-    yinc = float(dy/n)
+    x_increment = float(dx/n)
+    y_increment = float(dy/n)
     rx = float(x1)
     ry = float(y1)
     for i in range(0, n):
-      data.append(get_interpolated_value(rx, ry, image));
-      rx += xinc;
-      ry += yinc;
+        value = get_interpolated_value(rx, ry, image)
+        data.append(value)
+        rx += x_increment
+        ry += y_increment
     
     return data
 
@@ -80,30 +82,33 @@ def get_interpolated_value(x, y, image):
     height = image.shape[0]
     if x < 0.0 or x >= width - 1.0 or y < 0.0 or y >= height - 1.0:
         if x<-1.0 or x>=width or y<-1.0 or y>=height:
-            return 0.0;
+            return 0.0
         else:
             print("Need edge pixels. Functionality not implemented.")
             return 0.0
-            #return getInterpolatedEdgeValue(x, y, image);
+            #return getInterpolatedEdgeValue(x, y, image)
     
-    xbase = int(x);
-    ybase = int(y);
-    xFraction = x - xbase;
-    yFraction = y - ybase;
-    if xFraction < 0.0:
-        xFraction = 0.0;
-    if yFraction < 0.0:
-        yFraction = 0.0;
+    x_base = int(x)
+    y_base = int(y)
+    x_fraction = x - x_base
+    y_fraction = y - y_base
+    if x_fraction < 0.0:
+        x_fraction = 0.0
+    if y_fraction < 0.0:
+        y_fraction = 0.0
     
-    upperLeft = image[xbase, ybase]
-    lowerLeft = image[xbase+1, ybase]
-    upperRight = image[xbase+1, ybase+1]
-    lowerRight = image[xbase, ybase+1]
+    coords_x = [x_base, x_base+1, x_base+1, x_base]
+    coords_y = [y_base, y_base, y_base+1, y_base+1]
 
-    upperAverage = upperLeft + xFraction * (upperRight - upperLeft)
-    lowerAverage = lowerLeft + xFraction * (lowerRight - lowerLeft)
+    upper_left = image[x_base, y_base]
+    lower_left = image[x_base+1, y_base]
+    upper_right = image[x_base+1, y_base+1]
+    lower_right = image[x_base, y_base+1]
+    values = [upper_left, lower_left, upper_right, lower_right]
 
-    return lowerAverage + yFraction * (upperAverage - lowerAverage)
+    f = interp2d(coords_x, coords_y, values, kind='linear')
+
+    return f(x, y)
 
 def apply_first_derivative(float_image):
     derivative_image = []
@@ -111,6 +116,6 @@ def apply_first_derivative(float_image):
         length = len(column)
         output_col = np.zeros_like(column)
         for i in range(1, (len(column) - 1)):
-            output_col[i] = column[i-1] - column[i];
+            output_col[i] = column[i-1] - column[i]
         derivative_image.append(output_col)
     return np.array(derivative_image)

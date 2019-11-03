@@ -70,45 +70,29 @@ def get_line(x1, y1, x2, y2, image, radius):
     rx = float(x1)
     ry = float(y1)
     for i in range(0, n):
-        value = get_interpolated_value(rx, ry, image)
+        value = bilinear_interpolate(rx, ry, image)
         data.append(value)
         rx += x_increment
         ry += y_increment
     
     return data
 
-def get_interpolated_value(x, y, image):
-    width = image.shape[1]
-    height = image.shape[0]
-    if x < 0.0 or x >= width - 1.0 or y < 0.0 or y >= height - 1.0:
-        if x<-1.0 or x>=width or y<-1.0 or y>=height:
-            return 0.0
-        else:
-            print("Need edge pixels. Functionality not implemented.")
-            return 0.0
-            #return getInterpolatedEdgeValue(x, y, image)
-    
-    x_base = int(x)
-    y_base = int(y)
-    x_fraction = x - x_base
-    y_fraction = y - y_base
-    if x_fraction < 0.0:
-        x_fraction = 0.0
-    if y_fraction < 0.0:
-        y_fraction = 0.0
-    
-    coords_x = [x_base, x_base+1, x_base+1, x_base]
-    coords_y = [y_base, y_base, y_base+1, y_base+1]
+def bilinear_interpolate(x, y, image):
+    x1 = int(x)
+    x2 = x1 + 1
+    y1 = int(y)
+    y2 = y1 + 1
 
-    upper_left = image[x_base, y_base]
-    lower_left = image[x_base+1, y_base]
-    upper_right = image[x_base+1, y_base+1]
-    lower_right = image[x_base, y_base+1]
-    values = [upper_left, lower_left, upper_right, lower_right]
+    upper_left = image[x1, y1]
+    lower_left = image[x1, y2]
+    upper_right = image[x2, y1]
+    lower_right = image[x2, y2]
 
-    f = interp2d(coords_x, coords_y, values, kind='linear')
+    upper_average = ((x2 - x)/(x2 - x1) * upper_left) + ((x - x1)/(x2 - x1) * upper_right)
+    lower_average = ((x2 - x)/(x2 - x1) * lower_left) + ((x - x1)/(x2 - x1) * lower_right)
 
-    return f(x, y)
+    return ((y2 - y)/(y2 - y1) * upper_average) + ((y - y1)/(y2 - y1) * lower_average)
+
 
 def apply_first_derivative(float_image):
     derivative_image = []

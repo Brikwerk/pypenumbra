@@ -32,9 +32,25 @@ def reconstruct_from_image(image_path):
     return reconstruct(float_image, uint8_image)
 
 
-def reconstruct_from_raw_data(data_path):
-    # TODO: Load raw ct image data
-    print("test")
+def reconstruct_from_binary(data_path, width, height, dtype="uint16"):
+    """Reconstructs the focal spot and the sinogram
+    from raw binary image specified by the data path.
+
+    :param data_path: A path to the raw binary data
+    :param width: The width of the binary image
+    :param height: The height of the binary image
+    :param dtype: The data type of the binary image
+    :returns: A tuple containing the focal spot image
+    and the sinogram image.
+    """
+
+    image = np.fromfile(data_path, dtype=dtype)
+    image = image.reshape(width, height)
+    # Ensuring float and uint8 images are available
+    float_image = img_as_float64(image)
+    uint8_image = img_as_ubyte(image)
+
+    return reconstruct(float_image, uint8_image)
 
 
 def reconstruct(float_image, uint8_image):

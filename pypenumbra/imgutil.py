@@ -1,8 +1,16 @@
+"""
+    pypenumbra.imgutil
+    ~~~~~~~~~~~~~~
+    Defines the utility functions for working with images.
+    :copyright: 2019 Reece Walsh
+    :license: MIT
+"""
 import math
 
 import cv2
 import numpy as np
-from scipy.interpolate import interp2d
+from skimage import filters
+
 
 def threshold(gray_image):
     """Uses a gaussian blur and Otsu method thresholding
@@ -16,6 +24,7 @@ def threshold(gray_image):
     retval, threshold = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
     return threshold
+
 
 def get_center(threshold_image):
     """Selects the largest detected blob within an image,
@@ -59,7 +68,20 @@ def get_center(threshold_image):
 
     return (center_x, center_y, radius)
 
-def get_line(x1, y1, x2, y2, image, radius):
+
+def get_line(x1, y1, x2, y2, image):
+    """Gets a line of pixels from the center of an image outwards
+    to a specified point. If a subpixel is specified during traversal to
+    the outward point, bilinear interpolation is used to get the value.
+
+    :param x1: The center x-coordinate
+    :param y1: The center y-coordinate
+    :param x2: The outward x-coordinate
+    :param y2: The outward y-coordinate
+    :param image: The float64 image used to get pixel values from
+    :returns: An array of pixel values between the two points
+    """
+    
     dx = x2-x1
     dy = y2-y1
     n = int(round(math.sqrt(dx*dx + dy*dy)))
@@ -77,7 +99,15 @@ def get_line(x1, y1, x2, y2, image, radius):
     
     return data
 
+
 def bilinear_interpolate(x, y, image):
+    """Utilize bilinear resampling to get the x/y pixel value in the image
+
+    :param x: An x coordinate within the image in float format
+    :param x: A y coordinate within the image in float format
+    :param image: An image in float64 format
+    """
+
     x1 = int(x)
     x2 = x1 + 1
     y1 = int(y)
@@ -95,11 +125,23 @@ def bilinear_interpolate(x, y, image):
 
 
 def apply_first_derivative(float_image):
-    derivative_image = []
-    for column in float_image.T:
-        length = len(column)
-        output_col = np.zeros_like(column)
-        for i in range(1, (len(column) - 1)):
-            output_col[i] = column[i-1] - column[i]
-        derivative_image.append(output_col)
-    return np.array(derivative_image)
+    """Computes the first derivative of the image with the Prewitt filter.
+
+    :param float_image: A float64 format image
+    :returns: A float64 format image
+    """
+
+    edges = filters.scharr(float_image)
+    #edges = filters.prewitt(float_image)
+
+    # derivative_image = []
+    # for column in float_image.T:
+    #     length = len(column)
+    #     output_col = np.zeros_like(column)
+    #     for i in range(1, (len(column) - 1)):
+    #         output_col[i] = column[i-1] - column[i]
+    #     derivative_image.append(output_col)
+    # derivative_image = np.array(derivative_image)
+    # derivative_image = np.rot90(derivative_image, axes=(1,0))
+
+    return edges

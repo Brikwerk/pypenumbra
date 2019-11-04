@@ -1,3 +1,10 @@
+"""
+    pypenumbra.api
+    ~~~~~~~~~~~~~~
+    Defines the API for pypenumbra.
+    :copyright: 2019 Reece Walsh
+    :license: MIT
+"""
 import os
 
 from . import sinogram
@@ -8,6 +15,14 @@ import numpy as np
 
 
 def reconstruct_from_image(image_path):
+    """Reconstructs the focal spot and the sinogram
+    from a penumbra image specified by an image path.
+
+    :param image_path: A path to the penumbra image
+    :returns: A tuple containing the focal spot image
+    and the sinogram image.
+    """
+
     # Attempting to load an image in grayscale
     image = io.imread(image_path, as_gray=True)
     # Ensuring float and uint8 images are available
@@ -16,11 +31,22 @@ def reconstruct_from_image(image_path):
 
     return reconstruct(float_image, uint8_image)
 
-def reconstruct_from_ctdata(data_path):
+
+def reconstruct_from_raw_data(data_path):
     # TODO: Load raw ct image data
     print("test")
 
+
 def reconstruct(float_image, uint8_image):
+    """Reconstructs the focal spot and the sinogram
+    from a penumbra image in float64 and uint8 format.
+
+    :param float_image: The penumbra image in float64 format
+    :param uint8_image: The penumbra image in uint8 format
+    :returns: A tuple containing the focal spot image
+    and the sinogram image.
+    """
+
     # Getting sinogram
     sinogram_image = sinogram.construct_sinogram(float_image, uint8_image)
 

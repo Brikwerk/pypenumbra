@@ -23,8 +23,12 @@ class PyPenumbraCLI():
     focal spot and sinogram images from a penumbra image.
 
     Commands:
-        reconstruct - Reconstructs a focal spot/sinogram image from
+        image_reconstruct - Reconstructs a focal spot/sinogram image from
         a penumbra in a referenced image.
+
+        binary_reconstruct - Reconstructs a focal spot/sinogram image
+        from a penumbra in a referenced binary image (Eg: raw data from
+        a CR plate).
 
     Please type "pypenumbra COMMAND --help" for more information
     about these commands.

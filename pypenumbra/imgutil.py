@@ -5,11 +5,27 @@
     :copyright: 2019 Reece Walsh
     :license: MIT
 """
+import os
 import math
 
 import cv2
 import numpy as np
-from skimage import filters
+from skimage import filters, img_as_ubyte
+from skimage.exposure import equalize_adapthist
+from skimage.io import imsave
+
+
+def save_debug_image(image_name, image):
+    """Saves an image into the debug_images directory
+
+    :param image_name: The name to store the image as, extension included
+    :param image: An image
+    """
+
+    if not os.path.isdir("./debug_images"):
+        os.mkdir("./debug_images")
+    image_path = os.path.join("./debug_images", image_name)
+    imsave(image_path, img_as_ubyte(equalize_adapthist(image)))
 
 
 def threshold(gray_image):
@@ -21,7 +37,7 @@ def threshold(gray_image):
     """
 
     blur = cv2.GaussianBlur(gray_image, (5, 5), 0)
-    retval, threshold = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    retval, threshold = cv2.threshold(blur, 20, 255, cv2.THRESH_BINARY)
 
     return threshold
 
@@ -40,7 +56,6 @@ def get_center(threshold_image):
     # total image size to be detected
     height = threshold_image.shape[0]
     width = threshold_image.shape[1]
-    min_blob_area = (height*width)*0.05
 
     # Getting contour with the largest area larger than the min blob area
     contours, hierarchy = cv2.findContours(threshold_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -48,7 +63,7 @@ def get_center(threshold_image):
     max_area = 0
     for contour in contours:
         area = cv2.contourArea(contour)
-        if area > max_area and area > min_blob_area:
+        if area > max_area:
             penumbra_contour = contour
             max_area = area
 
@@ -89,8 +104,8 @@ def get_line(x1, y1, x2, y2, image):
     data = []
     x_increment = float(dx/n)
     y_increment = float(dy/n)
-    rx = float(x1)
-    ry = float(y1)
+    rx = float(y1)
+    ry = float(x1)
     for i in range(0, n):
         value = bilinear_interpolate(rx, ry, image)
         data.append(value)

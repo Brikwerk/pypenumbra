@@ -131,3 +131,4 @@ __pycache__
 .python-version
 /results
 .pytest_cache
+debug_images

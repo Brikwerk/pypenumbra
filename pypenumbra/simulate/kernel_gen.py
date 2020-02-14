@@ -109,8 +109,8 @@ def create_dual_point_kernel(size, distance_apart, padding=0):
     kernel = np.zeros((size, size))
     middle = size//2 # Floor dividing
     radius_apart = distance_apart//2 + 1
-    kernel[middle, middle-radius_apart] = 0.5
-    kernel[middle, middle+radius_apart] = 0.25
+    kernel[middle, middle-radius_apart] = 0.25
+    kernel[middle, middle+radius_apart] = 0.5
     kernel = np.pad(kernel, padding)
 
     return kernel

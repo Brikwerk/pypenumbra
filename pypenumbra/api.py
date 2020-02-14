@@ -68,6 +68,25 @@ def reconstruct_from_image(image_path, debug=False):
     return reconstruct(float_image, uint8_image, debug=debug)
 
 
+def reconstruct_from_array(image_array, debug=False):
+    """Reconstructs the focal spot and the sinogram
+    from a passed penumbra image in the form of an array.
+    
+    :param image_array: The penumbra image as a numpy array
+    :type image_path: numpy.ndarray
+    :param debug: A boolean value representing if debug images are output, defaults to False
+    :type debug: bool, optional
+    :return: A tuple containing the reconstructed image and the sinogram image.
+    :rtype: (numpy.ndarray, numpy.ndarray)
+    """
+
+    # Ensuring float and uint8 images are available
+    float_image = img_as_float64(image_array)
+    uint8_image = img_as_ubyte(image_array)
+
+    return reconstruct(float_image, uint8_image, debug=debug)
+
+
 def reconstruct_from_cr_data(data_path, width, height, dtype="uint16", kvp=70, debug=False):
     """Reconstructs the focal spot and the sinogram
     from raw binary image specified by the data path.

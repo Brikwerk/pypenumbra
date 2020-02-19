@@ -30,7 +30,7 @@ class SimulationAnimation(animation.TimedAnimation):
         self.ax3.axis('off')
         self.ax4 = fig.add_subplot(313)
         self.ax4.axis('off')
-        fig.tight_layout(pad=1)
+        fig.tight_layout(pad=4)
 
         animation.TimedAnimation.__init__(self, fig, interval=50, blit=True)
 
@@ -41,9 +41,13 @@ class SimulationAnimation(animation.TimedAnimation):
         penumbra_img = psim.generate_penumbra(blank_penumbra, kernel)
         reconstruction_img, sinogram = ppen.reconstruct_from_array(penumbra_img)
 
+        self.ax1.set_title("Kernel Image %dpx dist" % int(i))
         self.ax1.imshow(kernel, animated=True, cmap="gray")
+        self.ax2.set_title("Penumbra Image")
         self.ax2.imshow(penumbra_img, animated=True, cmap="gray")
+        self.ax3.set_title("Sinogram")
         self.ax3.imshow(sinogram, animated=True, cmap="gray")
+        self.ax4.set_title("Reconstruction")
         self.ax4.imshow(reconstruction_img, animated=True, cmap="gray")
 
     def new_frame_seq(self):
@@ -51,5 +55,5 @@ class SimulationAnimation(animation.TimedAnimation):
 
 
 ani = SimulationAnimation(159, 157, 100)
-# ani.save('simulation.mp4')
+#ani.save('simulation.mp4')
 plt.show()

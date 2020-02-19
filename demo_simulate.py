@@ -15,12 +15,8 @@ blank_penumbra = psim.generate_blank_penumbra_cr18x24(246)
 kernel = psim.create_dual_point_kernel(69, 35)
 penumbra_img = psim.generate_penumbra(blank_penumbra, kernel)
 
-# Converting to usable formats
-float_img = img_as_float64(penumbra_img)
-ubyte_img = img_as_ubyte(penumbra_img)
-
 # Reconstructing
-focal_spot, sinogram = ppen.reconstruct(float_img, ubyte_img, debug=DEBUG)
+focal_spot, sinogram = ppen.reconstruct_from_array(penumbra_img, debug=DEBUG)
 
 # Saving results
 if not os.path.isdir("./results"):

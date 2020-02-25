@@ -48,10 +48,16 @@ def construct_sinogram(float_image, uint8_image, angular_steps=360, debug=False)
     if radius < 1:
         raise ValueError("Radius is of improper length")
 
-    PADDING = int(round(radius * 0.323232))  # Relative padding
+    PADDING = int(round(radius * 0.25))  # Relative padding
     # Dictates how large the area around the penumbra is when cropping
     # Also dictates the ultimate x/y size of the focal spot output
     radius = radius + PADDING # Padding radius
+
+    # Padding image if circle + padding doesn't fit
+    pad_center_x, pad_center_y, uint8_image = imgutil.pad_to_fit(radius, center_x, center_y, uint8_image)
+    pad_center_x, pad_enter_y, float_image = imgutil.pad_to_fit(radius, center_x, center_y, float_image)
+    center_x = pad_center_x
+    center_y = pad_center_y
 
     # Slicing penumbra blob into sinogram
     sinogram = slice_penumbra_blob(center_x, center_y, radius, angular_steps, float_image, uint8_image, debug=debug)
@@ -134,9 +140,10 @@ def get_sinogram_size(sinogram_input, padding, debug=False):
 
     sinogram = img_as_ubyte(sinogram_input)
     # Attempting to isolate the circle within the pre-sinogram image
-    bsize = 15
+    bsize = 20
     blur = cv2.bilateralFilter(sinogram, bsize, bsize*2, bsize/2)
-    ret, thresh = cv2.threshold(blur, 200, 255, cv2.THRESH_BINARY)
+    thresh = cv2.adaptiveThreshold(blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 19, 2)
+    thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, np.ones((3,3),np.uint8))
 
     if debug:
         imgutil.save_debug_image("6 - threshold_sinogram.png", thresh)
@@ -144,34 +151,35 @@ def get_sinogram_size(sinogram_input, padding, debug=False):
     # Iterating over columns to find the center/radius
     # of the pre-sinogram. We assume that the black portion
     # of the pre-sinogram is on the bottom.
-    thresh_rotate = rotate(thresh, -90, resize=True)
+    thresh_rotate = rotate(thresh, 90, resize=True)
     height, width = thresh_rotate.shape
     sinogram_top = math.inf
-    sinogram_center = 0
+    sinogram_bottom = 0
     # Iterating over each col (or row now, since we rotated)
     for col_idx in range(0, height):
         col = thresh_rotate[col_idx]
-        sinogram_col_length = 0
-        # Iterate through each value and break upon finding
-        # the sinogram's edge
+        sinogram_temp_top = math.inf
+        sinogram_temp_bottom = 0
+        # Iterate through each value
         for value_idx in range(0, len(col)):
             value = col[value_idx]
-            if value > 0:
-                sinogram_col_length = width - value_idx
-                break
+            if value == 0:
+                if value_idx < sinogram_temp_top:
+                    sinogram_temp_top = value_idx
+                if value_idx > sinogram_bottom:
+                    sinogram_temp_bottom = value_idx
         # Update if the edge is a new low or high
-        if sinogram_col_length != 0:
-            if sinogram_col_length < sinogram_top:
-                sinogram_top = sinogram_col_length
-            elif sinogram_col_length > sinogram_center:
-                sinogram_center = sinogram_col_length
-
-    sinogram_radius = sinogram_center - sinogram_top
-    sinogram_bottom = sinogram_center + sinogram_radius
+        if sinogram_temp_top < sinogram_top:
+            sinogram_top = sinogram_temp_top
+        if sinogram_temp_bottom > sinogram_bottom:
+            sinogram_bottom = sinogram_temp_bottom
 
     top = int(round(sinogram_top - padding))
     if top < 0:
         top = 0
     bottom = int(round(sinogram_bottom + padding))
+    if bottom > width:
+        bottom = width
+    center = int(round(sinogram_top + (sinogram_bottom - sinogram_top)/2))
 
-    return top, bottom, sinogram_center
+    return top, bottom, center

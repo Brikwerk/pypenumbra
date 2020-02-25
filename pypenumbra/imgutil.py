@@ -84,6 +84,31 @@ def get_center(threshold_image):
     return (center_x, center_y, radius)
 
 
+def pad_to_fit(radius, center_x, center_y, image):
+    height, width = image.shape
+    pad_amount = 0
+
+    top = center_y - radius
+    if top < 0:
+        pad_amount = abs(top)
+
+    right = (center_x + radius) - width
+    if right > 0 and right > pad_amount:
+        pad_amount = right
+    
+    bottom = (center_y + radius) - height
+    if bottom > 0 and bottom > pad_amount:
+        pad_amount = bottom
+    
+    left = center_x - radius
+    if left < 0 and abs(left) > pad_amount:
+        pad_amount = left
+    
+    pad_image = np.pad(image, pad_amount+1)
+
+    return center_x + pad_amount, center_y + pad_amount, pad_image
+
+
 def get_line(x1, y1, x2, y2, image):
     """Gets a line of pixels from the center of an image outwards
     to a specified point. If a subpixel is specified during traversal to

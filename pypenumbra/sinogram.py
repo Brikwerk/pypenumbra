@@ -48,7 +48,7 @@ def construct_sinogram(float_image, uint8_image, angular_steps=360, debug=False)
     if radius < 1:
         raise ValueError("Radius is of improper length")
 
-    PADDING = int(round(radius * 0.25))  # Relative padding
+    PADDING = int(round(radius * 0.1))  # Relative padding
     # Dictates how large the area around the penumbra is when cropping
     # Also dictates the ultimate x/y size of the focal spot output
     radius = radius + PADDING # Padding radius
@@ -66,9 +66,9 @@ def construct_sinogram(float_image, uint8_image, angular_steps=360, debug=False)
     if debug:
         rs_height, rs_width = sinogram.shape
         rs_lines = cv2.cvtColor(img_as_ubyte(sinogram), cv2.COLOR_GRAY2RGB)
-        cv2.line(rs_lines, (0, top), (rs_width, top), (0, 255, 0), thickness=3)
-        cv2.line(rs_lines, (0, center), (rs_width, center), (0, 255, 0), thickness=3)
-        cv2.line(rs_lines, (0, bottom), (rs_width, bottom), (0, 255, 0), thickness=3)
+        cv2.line(rs_lines, (0, top), (rs_width, top), (0, 255, 0), thickness=2)
+        cv2.line(rs_lines, (0, center), (rs_width, center), (0, 255, 0), thickness=2)
+        cv2.line(rs_lines, (0, bottom), (rs_width, bottom), (0, 255, 0), thickness=2)
 
         imgutil.save_debug_image("5 - radial_slices.png", img_as_ubyte(sinogram))
         imgutil.save_debug_image("7 - sinogram_lines.png", rs_lines)
@@ -142,7 +142,7 @@ def get_sinogram_size(sinogram_input, padding, debug=False):
     # Attempting to isolate the circle within the pre-sinogram image
     bsize = 20
     blur = cv2.bilateralFilter(sinogram, bsize, bsize*2, bsize/2)
-    thresh = cv2.adaptiveThreshold(blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 19, 2)
+    thresh = cv2.adaptiveThreshold(blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 17, 2)
     thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, np.ones((3,3),np.uint8))
 
     if debug:
@@ -175,11 +175,21 @@ def get_sinogram_size(sinogram_input, padding, debug=False):
             sinogram_bottom = sinogram_temp_bottom
 
     top = int(round(sinogram_top - padding))
-    if top < 0:
-        top = 0
     bottom = int(round(sinogram_bottom + padding))
-    if bottom > width:
-        bottom = width
     center = int(round(sinogram_top + (sinogram_bottom - sinogram_top)/2))
+
+    # Checking if bottom or top exceed the image
+    # If so, we take the bigger difference between the two
+    # and subtract from the distance from the center.
+    top_diff = bottom_diff = 0
+    if top < 0:
+        top_diff = abs(top)
+    if bottom > width:
+        bottom_diff = bottom - width
+    diff = max(top_diff, bottom_diff)
+    # Adjusting top/bottom by the diff
+    if diff > 0:
+        top = top + diff
+        bottom = bottom - diff
 
     return top, bottom, center

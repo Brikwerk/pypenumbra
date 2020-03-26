@@ -37,7 +37,7 @@ def threshold(gray_image):
     """
 
     blur = cv2.GaussianBlur(gray_image, (5, 5), 0)
-    retval, threshold = cv2.threshold(blur, 20, 255, cv2.THRESH_BINARY)
+    retval, threshold = cv2.threshold(blur, 40, 255, cv2.THRESH_BINARY)
 
     return threshold
 

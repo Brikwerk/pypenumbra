@@ -12,7 +12,7 @@ import fire
 from skimage import io, img_as_ubyte
 from skimage.exposure import equalize_adapthist
 
-from .api import reconstruct_from_image, reconstruct_from_binary
+from .api import reconstruct_from_image, reconstruct_from_cr_data
 
 
 class PyPenumbraCLI():
@@ -70,7 +70,7 @@ class PyPenumbraCLI():
         :param sinogram_image_name: The name of the sinogram image
         """
 
-        focal_spot, sinogram = reconstruct_from_binary(data_path, width, height, dtype=dtype)
+        focal_spot, sinogram = reconstruct_from_cr_data(data_path, width, height, dtype=dtype)
 
         focal_spot = img_as_ubyte(equalize_adapthist(focal_spot))
         focal_spot_path = os.path.join(output_dir, "%s.png" % focal_spot_image_name)
